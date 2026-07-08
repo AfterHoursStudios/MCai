@@ -5,7 +5,7 @@
  * URL pattern: https://mc.ultimatemission.org/client/{clientKey}
  */
 
-import * as cheerio from 'cheerio';
+import { parse } from 'node-html-parser';
 
 // Re-export from clients.ts for backwards compatibility
 export { MC_CLIENTS, getClients, type MCClient } from './clients';
@@ -46,13 +46,14 @@ export async function fetchWorkerGroups(clientKey: string): Promise<WorkerGroup[
   }
 
   const html = await response.text();
-  const $ = cheerio.load(html);
+  const root = parse(html);
 
   const groups: WorkerGroup[] = [];
 
-  $('a[href*="/client/group/"]').each((_, element) => {
-    const href = $(element).attr('href');
-    const name = $(element).text().trim();
+  const links = root.querySelectorAll('a[href*="/client/group/"]');
+  for (const link of links) {
+    const href = link.getAttribute('href');
+    const name = link.text.trim();
 
     if (href && name) {
       // Extract ID from URL like /client/group/9f4f613a6bdcc883/13
@@ -65,7 +66,7 @@ export async function fetchWorkerGroups(clientKey: string): Promise<WorkerGroup[
         });
       }
     }
-  });
+  }
 
   return groups;
 }
@@ -86,36 +87,42 @@ export async function fetchStories(
   }
 
   const html = await response.text();
-  const $ = cheerio.load(html);
+  const root = parse(html);
 
   const stories: StoryData[] = [];
 
   // Parse report cards - each contains date, worker, stories, and photos
-  $('.reportCard').each((cardIndex, card) => {
-    const $card = $(card);
+  const reportCards = root.querySelectorAll('.reportCard');
 
+  reportCards.forEach((card, cardIndex) => {
     // Get date and worker from card header
-    const dateText = $card.find('.cardTitle').text().trim();
-    const workerName = $card.find('.cardMeta').text().trim() || 'Unknown Worker';
+    const dateEl = card.querySelector('.cardTitle');
+    const workerEl = card.querySelector('.cardMeta');
+    const dateText = dateEl?.text.trim() || '';
+    const workerName = workerEl?.text.trim() || 'Unknown Worker';
 
     // Get all photos for this report card
+    const photoEls = card.querySelectorAll('.photoCell img');
     const photos: StoryPhoto[] = [];
-    $card.find('.photoCell img').each((_, img) => {
-      const src = $(img).attr('src');
+    for (const img of photoEls) {
+      const src = img.getAttribute('src');
       if (src && src.includes('report-photo')) {
         photos.push({
           url: src,
           rating: 3,
         });
       }
-    });
+    }
 
     // Get all story blocks within this card
-    $card.find('.storyBlock').each((blockIndex, block) => {
-      const $block = $(block);
-      const content = $block.find('.storyText').text().trim();
-      const rating = $block.find('.stars .on').length || 1;
-      const storyId = $block.attr('data-story-id') || `${cardIndex}-${blockIndex}`;
+    const storyBlocks = card.querySelectorAll('.storyBlock');
+
+    storyBlocks.forEach((block, blockIndex) => {
+      const storyText = block.querySelector('.storyText');
+      const content = storyText?.text.trim() || '';
+      const starsEl = block.querySelector('.stars');
+      const rating = starsEl ? (starsEl.querySelectorAll('.on').length || 1) : 1;
+      const storyId = block.getAttribute('data-story-id') || `${cardIndex}-${blockIndex}`;
 
       // Skip if no content
       if (!content) return;
