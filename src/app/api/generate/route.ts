@@ -8,9 +8,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getClients } from '@/lib/mission-connect/clients';
-import { fetchWorkerGroups, fetchStories, sanitizeStoryForAI } from '@/lib/mission-connect/client';
-import { generateSocialContent } from '@/lib/ai/generate-content';
-import { enhanceImages } from '@/lib/cloudinary/enhance';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -23,7 +20,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ clients });
     }
 
-    // If clientKey provided, return groups for that client
+    // Dynamic import to avoid loading jsdom until needed
+    const { fetchWorkerGroups } = await import('@/lib/mission-connect/client');
     const groups = await fetchWorkerGroups(clientKey);
     return NextResponse.json({ groups });
   } catch (error) {
@@ -48,6 +46,11 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Dynamic imports to avoid loading jsdom until needed
+    const { fetchWorkerGroups, fetchStories, sanitizeStoryForAI } = await import('@/lib/mission-connect/client');
+    const { generateSocialContent } = await import('@/lib/ai/generate-content');
+    const { enhanceImages } = await import('@/lib/cloudinary/enhance');
 
     // Fetch stories from the group
     const stories = await fetchStories(clientKey, groupId, { withPhotosOnly: true });
