@@ -7,7 +7,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getClients, fetchWorkerGroups, fetchStories, sanitizeStoryForAI } from '@/lib/mission-connect/client';
+import { getClients } from '@/lib/mission-connect/clients';
+import { fetchWorkerGroups, fetchStories, sanitizeStoryForAI } from '@/lib/mission-connect/client';
 import { generateSocialContent } from '@/lib/ai/generate-content';
 import { enhanceImages } from '@/lib/cloudinary/enhance';
 
