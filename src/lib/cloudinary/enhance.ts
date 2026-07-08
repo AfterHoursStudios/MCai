@@ -18,6 +18,11 @@ cloudinary.config({
  * This doesn't require uploading - it fetches and transforms on-the-fly
  */
 export function getEnhancedImageUrl(originalUrl: string): string {
+  // If Cloudinary isn't configured, return original URL
+  if (!process.env.CLOUDINARY_CLOUD_NAME) {
+    return originalUrl;
+  }
+
   // Use Cloudinary's fetch feature to grab external image and apply transformations
   const transformations = [
     'f_auto',           // Auto format (webp, etc)

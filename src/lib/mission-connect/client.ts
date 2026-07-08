@@ -105,8 +105,14 @@ export async function fetchStories(
     const photoEls = card.querySelectorAll('.photoCell img');
     const photos: StoryPhoto[] = [];
     for (const img of photoEls) {
-      const src = img.getAttribute('src');
+      let src = img.getAttribute('src');
       if (src && src.includes('report-photo')) {
+        // Make relative URLs absolute
+        if (src.startsWith('/')) {
+          src = `${BASE_URL}${src}`;
+        } else if (!src.startsWith('http')) {
+          src = `${BASE_URL}/${src}`;
+        }
         photos.push({
           url: src,
           rating: 3,
