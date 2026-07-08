@@ -1,0 +1,228 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 20% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 20%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 45 93% 58%;
+    --secondary-foreground: 220 20% 20%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 10% 46%;
+    --accent: 199 89% 95%;
+    --accent-foreground: 199 89% 30%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 220 20% 20%;
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 199 89% 48%;
+    --radius: 0.625rem;
+  }
+
+  .dark {
+    --background: 220 20% 10%;
+    --foreground: 210 20% 96%;
+    --card: 220 20% 13%;
+    --card-foreground: 210 20% 96%;
+    --popover: 220 20% 13%;
+    --popover-foreground: 210 20% 96%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 45 93% 58%;
+    --secondary-foreground: 220 20% 10%;
+    --muted: 220 15% 20%;
+    --muted-foreground: 210 15% 60%;
+    --accent: 199 50% 20%;
+    --accent-foreground: 199 89% 70%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 220 20% 10%;
+    --border: 220 15% 20%;
+    --input: 220 15% 20%;
+    --ring: 199 89% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+  }
+
+  /* Improve text rendering */
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Focus styles for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Remove default focus outline */
+  :focus:not(:focus-visible) {
+    @apply outline-none;
+  }
+}
+
+@layer components {
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-border;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-sky-500 to-emerald-500 bg-clip-text text-transparent;
+  }
+
+  /* Mission gradient */
+  .mission-gradient {
+    @apply bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500;
+  }
+
+  /* Glow effect */
+  .glow {
+    @apply relative;
+  }
+  .glow::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-sky-500 to-emerald-500 opacity-50 blur-xl -z-10;
+  }
+
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-background/80 backdrop-blur-md;
+  }
+
+  /* Shimmer loading effect */
+  .shimmer {
+    @apply animate-shimmer bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%];
+  }
+}
+
+@layer utilities {
+  /* Animation utilities */
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+
+  /* Text balance for headings */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Aspect ratio utilities */
+  .aspect-instagram-square {
+    aspect-ratio: 1/1;
+  }
+
+  .aspect-instagram-portrait {
+    aspect-ratio: 4/5;
+  }
+
+  .aspect-instagram-landscape {
+    aspect-ratio: 1.91/1;
+  }
+
+  .aspect-story {
+    aspect-ratio: 9/16;
+  }
+
+  .aspect-video {
+    aspect-ratio: 16/9;
+  }
+
+  /* Safe area for mobile */
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,161 @@
+// Prisma Schema for AI Social Media Story Studio
+// Simplified for Mission Connect Integration
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// ============================================================================
+// SIMPLE AUTHENTICATION
+// ============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // Hashed password
+  name      String
+  role      String   @default("user") // user, admin
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  generations Generation[]
+  posts       SocialPost[]
+
+  @@map("users")
+}
+
+// ============================================================================
+// MISSION CONNECT DATA CACHE
+// ============================================================================
+
+model WorkerGroup {
+  id         String   @id @default(cuid())
+  externalId String   @unique @map("external_id") // e.g., "13" for Guntur
+  name       String
+  clientKey  String   @map("client_key") // e.g., "9f4f613a6bdcc883"
+  lastSynced DateTime? @map("last_synced")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  stories Story[]
+
+  @@map("worker_groups")
+}
+
+model Story {
+  id            String   @id @default(cuid())
+  workerGroupId String   @map("worker_group_id")
+  externalId    String?  @map("external_id")
+  workerName    String   @map("worker_name")
+  storyDate     DateTime @map("story_date")
+  content       String   @db.Text
+  rating        Int      @default(0) // 1-3 stars
+  patientInfo   String?  @map("patient_info") // For reference, excluded from AI
+  condition     String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  workerGroup WorkerGroup  @relation(fields: [workerGroupId], references: [id], onDelete: Cascade)
+  photos      Photo[]
+  generations Generation[]
+
+  @@unique([workerGroupId, externalId])
+  @@map("stories")
+}
+
+model Photo {
+  id          String   @id @default(cuid())
+  storyId     String   @map("story_id")
+  url         String
+  thumbnailUrl String? @map("thumbnail_url")
+  rating      Int      @default(0)
+  orderIndex  Int      @default(0) @map("order_index")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@map("photos")
+}
+
+// ============================================================================
+// AI GENERATIONS
+// ============================================================================
+
+model Generation {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  storyId      String   @map("story_id")
+  status       String   @default("pending") // pending, processing, completed, failed
+  platforms    String[] // instagram, facebook, linkedin, x, etc.
+  errorMessage String?  @map("error_message")
+  tokensUsed   Int      @default(0) @map("tokens_used")
+  createdAt    DateTime @default(now()) @map("created_at")
+  completedAt  DateTime? @map("completed_at")
+
+  user    User            @relation(fields: [userId], references: [id])
+  story   Story           @relation(fields: [storyId], references: [id])
+  results GeneratedPost[]
+
+  @@map("generations")
+}
+
+model GeneratedPost {
+  id           String   @id @default(cuid())
+  generationId String   @map("generation_id")
+  platform     String   // instagram, facebook, linkedin, x, threads
+  hook         String?  @db.Text
+  caption      String   @db.Text
+  hashtags     String[]
+  hasEmojis    Boolean  @default(true) @map("has_emojis")
+  isShort      Boolean  @default(false) @map("is_short")
+  score        Int?     // 0-100 virality score
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  generation Generation  @relation(fields: [generationId], references: [id], onDelete: Cascade)
+  socialPosts SocialPost[]
+
+  @@map("generated_posts")
+}
+
+// ============================================================================
+// SOCIAL MEDIA POSTING
+// ============================================================================
+
+model SocialAccount {
+  id           String   @id @default(cuid())
+  platform     String   // facebook, instagram
+  accountName  String   @map("account_name")
+  accessToken  String   @map("access_token") @db.Text
+  refreshToken String?  @map("refresh_token") @db.Text
+  expiresAt    DateTime? @map("expires_at")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  posts SocialPost[]
+
+  @@map("social_accounts")
+}
+
+model SocialPost {
+  id              String   @id @default(cuid())
+  generatedPostId String   @map("generated_post_id")
+  socialAccountId String   @map("social_account_id")
+  userId          String   @map("user_id")
+  status          String   @default("draft") // draft, scheduled, posted, failed
+  externalPostId  String?  @map("external_post_id")
+  scheduledFor    DateTime? @map("scheduled_for")
+  postedAt        DateTime? @map("posted_at")
+  errorMessage    String?  @map("error_message")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  generatedPost GeneratedPost @relation(fields: [generatedPostId], references: [id])
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+
+  @@map("social_posts")
+}
